@@ -44,44 +44,46 @@ public class PerlinNoise {
 	 * @param octave
 	 * @return
 	 */
-	public float[][] GenerateSmoothNoise(float[][] baseNoise, int octave){
+	public float[][][] GenerateSmoothNoise(float[][] baseNoise, int octaveCount){
 		
-		smoothNoiseOutput = new float[width][height];
+		float[][][] smoothNoiseOutput = new float[octaveCount][width][height];
 		
-		
-		int samplePeriod = (int) Math.pow(2, octave); // calculates 2 ^ octave
-		float sampleFrequency = 1.0f / samplePeriod;
+		for(int i = 0; i < octaveCount; i++){
+			int samplePeriod = (int) Math.pow(2, i); // calculates 2 ^ octave
+			float sampleFrequency = 1.0f / samplePeriod;
 
-		for (int x = 0; x < width; x++)
-		{
-			//calculate the horizontal sampling indices
-			int sample_x0 = (x / samplePeriod) * samplePeriod;
-			int sample_x1 = (sample_x0 + samplePeriod) % width; //wrap around
-			float horizontal_blend = (x - sample_x0) * sampleFrequency;
-
-			for (int y = 0; y < height; y++)
+			for (int x = 0; x < width; x++)
 			{
-				//calculate the vertical sampling indices
-				int sample_j0 = (y / samplePeriod) * samplePeriod;
-				int sample_j1 = (sample_j0 + samplePeriod) % height; //wrap around
-				float vertical_blend = (y - sample_j0) * sampleFrequency;
+				//calculate the horizontal sampling indices
+				int sample_x0 = (x / samplePeriod) * samplePeriod;
+				int sample_x1 = (sample_x0 + samplePeriod) % width; //wrap around
+				float horizontal_blend = (x - sample_x0) * sampleFrequency;
 
-				//blend the top two corners
-				float top = Interpolate(baseNoise[sample_x0][sample_j0],
-						baseNoise[sample_x1][sample_j0], horizontal_blend);
+				for (int y = 0; y < height; y++)
+				{
+					//calculate the vertical sampling indices
+					int sample_j0 = (y / samplePeriod) * samplePeriod;
+					int sample_j1 = (sample_j0 + samplePeriod) % height; //wrap around
+					float vertical_blend = (y - sample_j0) * sampleFrequency;
 
-				//blend the bottom two corners
-				float bottom = Interpolate(baseNoise[sample_x0][sample_j1],
-						baseNoise[sample_x1][sample_j1], horizontal_blend);
+					//blend the top two corners
+					float top = Interpolate(baseNoise[sample_x0][sample_j0],
+							baseNoise[sample_x1][sample_j0], horizontal_blend);
 
-				//final blend
-				try {
-					smoothNoiseOutput[x][y] = Interpolate(top, bottom, vertical_blend);
-				} catch (Exception e) {
-					System.out.println("x:" + x + "y:" + y + ":" + top + ":" + bottom + ":" + vertical_blend);
-					System.exit(0);
+					//blend the bottom two corners
+					float bottom = Interpolate(baseNoise[sample_x0][sample_j1],
+							baseNoise[sample_x1][sample_j1], horizontal_blend);
+
+					//final blend
+					try {
+						smoothNoiseOutput[i][x][y] = Interpolate(top, bottom, vertical_blend);
+					} catch (Exception e) {
+						System.out.println("x:" + x + "y:" + y + ":" + top + ":" + bottom + ":" + vertical_blend);
+						e.printStackTrace();
+						System.exit(0);
+					}
+
 				}
-
 			}
 		}
 
@@ -110,15 +112,9 @@ public class PerlinNoise {
 	public float[][] GeneratePerlinNoise(float[][] baseNoise, int octaveCount)
 	{
 
-		float[][][] smoothNoise = new float[octaveCount][][]; //an array of 2D arrays containing
+		float[][][] smoothNoise = GenerateSmoothNoise(baseNoise, octaveCount);
 
 		float persistance = 0.5f;
-
-		//generate smooth noise
-		for (int i = 0; i < octaveCount; i++)
-		{
-			smoothNoise[i] = GenerateSmoothNoise(baseNoise, i);
-		}
 
 		float[][] perlinNoise = new float[width][height];
 		float amplitude = 1.0f;

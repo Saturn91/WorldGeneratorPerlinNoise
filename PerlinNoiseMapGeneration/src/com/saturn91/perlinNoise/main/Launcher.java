@@ -9,28 +9,34 @@ import javax.imageio.ImageIO;
 import com.saturn91.perlinNoise.PerlinNoise;
 
 public class Launcher {
-	private static float waterhight = 0.45f;
+	private static float waterhight = 0.4f;
 	
 	public static void main(String[] args){
-		int width = 1000;
-		int height = 1000;
-		generateMap(width, height, 12345);		
+		int width = 7000;
+		int height = 6000;
+		int seed = (int) (Math.random()*Integer.MAX_VALUE);
+		generateMap(width, height, seed);		
 	}
 	
 	private static void generateMap(int width, int height, long seed){
 		long startTime = System.currentTimeMillis();
 		PerlinNoise noise = new PerlinNoise(width, height);
 		float[][] baseNoise = noise.generateWhiteNoise(seed);
-		float[][] perlinNoise = noise.GeneratePerlinNoise(baseNoise, 7);
+		float[][] perlinNoise = noise.GeneratePerlinNoise(baseNoise, 8);
 		
 		System.out.println("generated Map in: " + ((float) (System.currentTimeMillis()-startTime)/1000) + "s");
 		startTime = System.currentTimeMillis();
 		BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
 		
 		int procent = 0;
+		int oldpercent = -1;
 		for(int x = 0; x < width; x++){
 			procent = (int) ((float)x/ (float) width*100);
-			System.out.println("loaded: " + procent + "%");
+			if(oldpercent != procent){
+				System.out.println("loaded: " + procent + "%");
+				oldpercent = procent;
+			}
+			
 			for(int y = 0; y < height; y++){
 				int r = (int) (perlinNoise[x][y]*255.0f);
 				int g = (int) (perlinNoise[x][y]*255.0f);
