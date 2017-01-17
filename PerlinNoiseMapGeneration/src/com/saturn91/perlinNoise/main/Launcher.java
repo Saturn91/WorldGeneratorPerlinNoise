@@ -6,23 +6,36 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import com.saturn91.perlinNoise.MapGenerator;
 import com.saturn91.perlinNoise.PerlinNoise;
 
 public class Launcher {
-	private static float waterhight = 0.4f;
 	
 	public static void main(String[] args){
-		int width = 7000;
-		int height = 6000;
-		int seed = (int) (Math.random()*Integer.MAX_VALUE);
-		generateMap(width, height, seed);		
+		int width = 2000;
+		int height = 2000;
+		
+		for(int i = 0; i < 10; i++){
+			int seed = (int) (Math.random()*Integer.MAX_VALUE);
+			generateMap(width, height, 9, seed);	
+		}
+			
 	}
 	
-	private static void generateMap(int width, int height, long seed){
+	private static void generateMap(int width, int height, int octave, long seed){
 		long startTime = System.currentTimeMillis();
-		PerlinNoise noise = new PerlinNoise(width, height);
-		float[][] baseNoise = noise.generateWhiteNoise(seed);
-		float[][] perlinNoise = noise.GeneratePerlinNoise(baseNoise, 8);
+		MapGenerator generator = new MapGenerator();
+		
+		generator.setOctave(octave);
+		generator.defineHeightLayersNum(7);
+		generator.defineHeightLayer(0, 0.00f);
+		generator.defineHeightLayer(1, 0.43f);
+		generator.defineHeightLayer(2, 0.45f);
+		generator.defineHeightLayer(3, 0.55f);
+		generator.defineHeightLayer(4, 0.65f);
+		generator.defineHeightLayer(5, 0.70f);
+		generator.defineHeightLayer(6, 0.80f);
+		int[][] map = generator.getRandomMap(seed, width, height);
 		
 		System.out.println("generated Map in: " + ((float) (System.currentTimeMillis()-startTime)/1000) + "s");
 		startTime = System.currentTimeMillis();
@@ -32,22 +45,53 @@ public class Launcher {
 		int oldpercent = -1;
 		for(int x = 0; x < width; x++){
 			procent = (int) ((float)x/ (float) width*100);
-			if(oldpercent != procent){
-				System.out.println("loaded: " + procent + "%");
-				oldpercent = procent;
-			}
-			
 			for(int y = 0; y < height; y++){
-				int r = (int) (perlinNoise[x][y]*255.0f);
-				int g = (int) (perlinNoise[x][y]*255.0f);
-				int b = (int) (perlinNoise[x][y]*255.0f);
-				if(perlinNoise[x][y] >= waterhight){
-					r = 0;
-					b = 0;
-				}else{
+				int r = 0;
+				int g = 0;
+				int b = 0;
+				
+				if(map[x][y] == 0){
 					r = 0;
 					g = 0;
+					b = 255;
 				}
+				
+				if(map[x][y] == 1){
+					r = 80;
+					g = 80;
+					b = 255;
+				}
+				
+				if(map[x][y] == 2){
+					r = 80;
+					g = 200;
+					b = 80;
+				}
+				
+				if(map[x][y] == 3){
+					r = 70;
+					g = 180;
+					b = 70;
+				}
+				
+				if(map[x][y] == 4){
+					r = 60;
+					g = 160;
+					b = 60;
+				}
+				
+				if(map[x][y] == 5){
+					r = 120;
+					g = 120;
+					b = 120;
+				}
+				
+				if(map[x][y] == 6){
+					r = 255;
+					g = 255;
+					b = 255;
+				}
+				
 				
 				int col = (r << 16) | (g << 8) | b;
 				bufferedImage.setRGB(x, y, col);
@@ -55,7 +99,7 @@ public class Launcher {
 		}
 		
 		try {
-		    File outputfile = new File("map" +  seed + "_" + waterhight + ".png");
+		    File outputfile = new File("map" +  seed + ".png");
 		    ImageIO.write(bufferedImage, "png", outputfile);
 		    System.out.println("painted Map in: " + ((float) (System.currentTimeMillis()-startTime)/1000) + "s");
 		    System.out.println("savedMap"+ seed);
