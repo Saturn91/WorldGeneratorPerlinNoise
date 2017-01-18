@@ -12,8 +12,8 @@ import com.saturn91.perlinNoise.PerlinNoise;
 public class Launcher {
 	
 	public static void main(String[] args){
-		int width = 500;
-		int height = 500;
+		int width = 1000;
+		int height = 1000;
 		
 		for(int i = 0; i < 2; i++){
 			int seed = (int) (Math.random()*Integer.MAX_VALUE);
@@ -41,6 +41,9 @@ public class Launcher {
 		startTime = System.currentTimeMillis();
 		BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
 		
+		//debug
+		int countRiverTiles = 0;
+		
 		for(int x = 0; x < width; x++){
 			for(int y = 0; y < height; y++){
 				int r = 0;
@@ -48,6 +51,7 @@ public class Launcher {
 				int b = 0;
 				
 				if(map[x][y] == -1){
+					countRiverTiles++;
 					r = 255;
 					g = 0;
 					b = 255;
@@ -99,7 +103,11 @@ public class Launcher {
 				int col = (r << 16) | (g << 8) | b;
 				bufferedImage.setRGB(x, y, col);
 			}
+			
+			
 		}
+		
+		System.out.println("generated " + countRiverTiles + " riverTiles");
 		
 		try {
 		    File outputfile = new File("map" +  seed + ".png");

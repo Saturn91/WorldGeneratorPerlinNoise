@@ -5,80 +5,104 @@ import java.util.ArrayList;
 
 public class River_PathFinding {
 	private ArrayList<Point> path;
-	private ArrayList<Point> openPositions = new ArrayList<>();
+	private ArrayList<Point> openPositions;
+	private ArrayList<Point> closedPositions;
+	private final Point up = new Point(0, 1);
+	private final Point right = new Point(1, 0);
+	private final Point down = new Point(-1, 0);
+	private final Point left = new Point(-1, 0);
 	
 	/**
 	 * returns the positions which are now river positions
 	 * @param startPosition
 	 * @return a list of all positions in the map which are now riverPositions or null (if not possible)
 	 */
-	public Point[] generateARiver(float[][] heightMap, int mapWidth, int mapHeight, Point startPosition, float waterHeight){
-		Point cursor = startPosition;
-		path = new ArrayList<>();
-		//search until you are in water or there's no other deeper field under cursor
-		Point[] checkPositions = new Point[4];
-		Point lastPosition = null;
-		for(int i = 0; i < 4; i++){
-			checkPositions[i] = new Point();
-		}
-		while(heightMap[cursor.x][cursor.y] > waterHeight){
-			path.add(cursor);
-			//check positions around Cursor for deepest
-			if(cursor.x < mapWidth -1 && cursor.y < mapHeight -1 && cursor.x > 1 && cursor.y > 1){
-				checkPositions[0].setLocation(cursor.x-1, cursor.y);	//links
-				checkPositions[1].setLocation(cursor.x, cursor.y+1);	//oben
-				checkPositions[2].setLocation(cursor.x+1, cursor.y);	//rechts
-				checkPositions[3].setLocation(cursor.x, cursor.y-1);	//unten
-			}
-			int forbiddenIndex = -1;
-			if(lastPosition != null){
-				for(int i = 0; i < 4; i ++){
-					if(checkPositions[i].x == lastPosition.x && checkPositions[i].y == lastPosition.y){
-						forbiddenIndex = i;
-					}
-				}
-			}
-			
-			
-			
-			int smallestIndex = -1;
-			int smallestPoint = 0;
-			
-			for(int i = 0; i < 4; i++){
-				if(i != forbiddenIndex){
-					if(heightMap[checkPositions[i].x][checkPositions[i].y] < heightMap[checkPositions[smallestPoint].x][checkPositions[smallestPoint].y]){
-						smallestPoint = i;
-					}
-					if(heightMap[checkPositions[i].x][checkPositions[i].y] < heightMap[cursor.x][cursor.y]){
-						smallestIndex = i;
-					}
-				}				
-			}
-			
-			if(smallestIndex != -1){
-				cursor = checkPositions[smallestIndex];
-				lastPosition = cursor;
-			}else{
-				//cursor = checkPositions[smallestPoint];
-				break;
-			}
-			
-			if(path.size() > 500){
-				break;
-			}
-			
-		}
+	public Point[] generateARiver(int[][] heightMapInt, int mapWidth, int mapHeight, Point startPosition, float waterHeight){
 		Point[] riverBed = null;
-		if(path.size() > 0){
-			riverBed = new Point[path.size()];
-			for(int i = 0; i < path.size(); i++){
-				riverBed[i] = path.get(i);
+		
+		path = new ArrayList<>();
+		openPositions = new ArrayList<>();
+		closedPositions = new ArrayList<>();
+		
+		Point cursor = startPosition;
+		Point checkPoint = new Point();
+		int getStartHeight = heightMapInt[cursor.x][cursor.y];
+		float[] directionsDownWeight = new float[4];
+		boolean[] possibleDirection = new boolean[4];
+		int[] lengthCounter = new int[4];
+		for(int i = 0; i < 4; i++){
+			checkPoint.x = cursor.x;
+			checkPoint.y = cursor.y;
+			while(heightMapInt[checkPoint.x][checkPoint.y] == getStartHeight &&
+					checkPoint.x < mapWidth && checkPoint.y < mapHeight &&
+					checkPoint.x >= 0 && checkPoint.y >= 0){
+				possibleDirection[i] = true;
+				checkPoint.x += getDirection(i).x;
+				checkPoint.y += getDirection(i).y;
+				lengthCounter[i]++;
+			} 
+			if(heightMapInt[checkPoint.x][checkPoint.y] > getStartHeight){
+				possibleDirection[i] = false;
 			}
-			System.out.println("generated River with lenght: " + path.size());
-		}else{
-			return null;
+		}
+		int length = 0;
+		int posibilities = 0;
+		int lastPosibleIndex = -1;
+		for(int i = 0; i < 4; i ++){
+			if(possibleDirection[i]){
+				posibilities ++;
+				length += lengthCounter[i];
+				lastPosibleIndex = i;
+			}			
 		}
 		
+		if(posibilities > 1){
+			for(int i = 0; i < 4; i ++){
+				if(possibleDirection[i]){
+					directionsDownWeight[i] = (float) (length - lengthCounter[i])/(float) (length);
+				}
+			}
+		}else{
+			directionsDownWeight[getNextDirection(lastPosibleIndex, true)] = 0.1f;
+			directionsDownWeight[getNextDirection(lastPosibleIndex, false)] = 0.1f;
+			directionsDownWeight[lastPosibleIndex] = 0.9f;
+			
+		}		
+		
+		
+		
+		
 		return riverBed;
+	}
+	
+	private Point getDirection(int direction){
+		switch(direction){
+			case 0: return up;
+			case 1: return right;
+			case 2: return down;
+			case 3: return left;
+			default: return null;
+		}
+	}
+	
+	private int getNextDirection(int direction, boolean counterclockwhise){
+		if(counterclockwhise){
+			switch(direction){
+				case 0: return 3;
+				case 1: return 0;
+				case 2: return 1;
+				case 3: return 2;
+				default: return -1;
+			}
+		}else{
+			switch(direction){
+				case 0: return 1;
+				case 1: return 2;
+				case 2: return 3;
+				case 3: return 0;
+				default: return -1;
+			}
+		}
+		
 	}
 }

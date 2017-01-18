@@ -16,8 +16,7 @@ public class MapGenerator {
 
 	//River generation
 	private final int selectionGridsize = 10;
-	private final float riverStartHeight = 0.65f;
-	private final float riverHightVariation = 0.1f;
+	private final float riverStartHeight = 5f;
 
 	/**
 	 * returns a int[][] which divides the Land in discret hights
@@ -31,9 +30,7 @@ public class MapGenerator {
 			noise = new PerlinNoise(width, height);
 			map = noise.generateMap(octave, seed);
 			
-			//Debug!!!
-			riverPositions = generateRivers(map, width, height, 10, seed);
-			//\debug
+			
 			
 			int[][] landLayers = new int[width][height];
 			for(int x = 0; x < width; x++){
@@ -47,9 +44,16 @@ public class MapGenerator {
 				}
 			}
 			
-			for(Point p: riverPositions){
-				landLayers[p.x][p.y] = -1;
+			//Debug!!!
+			riverPositions = generateRivers(landLayers, width, height, 10, seed);
+			//\debug
+			
+			if(riverPositions!= null){
+				for(Point p: riverPositions){
+					landLayers[p.x][p.y] = -1;
+				}
 			}
+			
 			return landLayers;
 		}else{
 			System.err.println("define heightLayers!");
@@ -58,14 +62,14 @@ public class MapGenerator {
 
 	}
 
-	public Point[] generateRivers(float[][] heightMap, int mapWidth, int mapHeight, int numOfRivers, long seed){
+	public Point[] generateRivers(int[][] heightMapInt, int mapWidth, int mapHeight, int numOfRivers, long seed){
 		Random random = new Random(seed);
 
 		//check Grid for possible Riverstartings
 		ArrayList<Point> riverStartpositions = new ArrayList<>();
 		for(int x = selectionGridsize; x < mapWidth; x +=selectionGridsize){
 			for(int y = selectionGridsize; y < mapHeight; y +=selectionGridsize){
-				if(heightMap[x][y] >= riverStartHeight && heightMap[x][y] <  (riverStartHeight + 0.1f)){
+				if(heightMapInt[x][y] >= riverStartHeight && heightMapInt[x][y] <  (riverStartHeight + 1)){
 					riverStartpositions.add(new Point(x, y));
 					
 				}
@@ -74,21 +78,26 @@ public class MapGenerator {
 		
 		System.out.println("found " + riverStartpositions.size() + " river startpositions");
 		ArrayList<Point> riverPointList = new ArrayList<>();
-		Point[] actualRiver;
-		River_PathFinding riverPath = new River_PathFinding();
-		for(int i = 0 ; i < numOfRivers; i++){
-			int index = (int) (random.nextDouble()*riverStartpositions.size());
-			actualRiver = riverPath.generateARiver(heightMap, mapWidth, mapHeight, riverStartpositions.get(index), heightLayers[1]);
-			for(int j = 0; j < actualRiver.length; j++){
-				riverPointList.add(actualRiver[j]);
+		if(riverStartpositions.size() > 0){
+			Point[] actualRiver;
+			River_PathFinding riverPath = new River_PathFinding();
+			for(int i = 0 ; i < numOfRivers; i++){
+				int index = (int) (random.nextDouble()*riverStartpositions.size());
+				actualRiver = riverPath.generateARiver(heightMapInt, mapWidth, mapHeight, riverStartpositions.get(index), heightLayers[1]);
+				if(actualRiver != null){
+					for(int j = 0; j < actualRiver.length; j++){
+						riverPointList.add(actualRiver[j]);
+					}
+				}				
 			}
-		}
-		Point[] riverPositions = new Point[riverPointList.size()];
-		for(int i = 0; i < riverPointList.size(); i++){
-			riverPositions[i] = riverPointList.get(i);
+			riverPositions = new Point[riverPointList.size()];
+			for(int i = 0; i < riverPointList.size(); i++){
+				riverPositions[i] = riverPointList.get(i);
+			}
+		}else{
+			System.out.println("generated 0 rivers!");
 		}
 		
-		System.out.println(riverPositions.length);
 		
 		return riverPositions;
 	}
