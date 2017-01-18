@@ -12,10 +12,10 @@ import com.saturn91.perlinNoise.PerlinNoise;
 public class Launcher {
 	
 	public static void main(String[] args){
-		int width = 2000;
-		int height = 2000;
+		int width = 500;
+		int height = 500;
 		
-		for(int i = 0; i < 10; i++){
+		for(int i = 0; i < 2; i++){
 			int seed = (int) (Math.random()*Integer.MAX_VALUE);
 			generateMap(width, height, 9, seed);	
 		}
@@ -41,14 +41,17 @@ public class Launcher {
 		startTime = System.currentTimeMillis();
 		BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
 		
-		int procent = 0;
-		int oldpercent = -1;
 		for(int x = 0; x < width; x++){
-			procent = (int) ((float)x/ (float) width*100);
 			for(int y = 0; y < height; y++){
 				int r = 0;
 				int g = 0;
 				int b = 0;
+				
+				if(map[x][y] == -1){
+					r = 255;
+					g = 0;
+					b = 255;
+				}
 				
 				if(map[x][y] == 0){
 					r = 0;
