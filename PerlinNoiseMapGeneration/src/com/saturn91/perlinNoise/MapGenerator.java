@@ -10,7 +10,6 @@ public class MapGenerator {
 
 	private PerlinNoise noise;
 	private float[][] map;
-	private Point[] riverPositions;
 	private int octave = 5;
 	private float[] heightLayers;	//this Array stores the number and height of the different hight-Layers
 
@@ -45,14 +44,8 @@ public class MapGenerator {
 			}
 			
 			//Debug!!!
-			riverPositions = generateRivers(landLayers, width, height, 10, seed);
+			landLayers = generateRivers(landLayers, width, height, 50, seed);
 			//\debug
-			
-			if(riverPositions!= null){
-				for(Point p: riverPositions){
-					landLayers[p.x][p.y] = -1;
-				}
-			}
 			
 			return landLayers;
 		}else{
@@ -62,7 +55,7 @@ public class MapGenerator {
 
 	}
 
-	public Point[] generateRivers(int[][] heightMapInt, int mapWidth, int mapHeight, int numOfRivers, long seed){
+	public int[][] generateRivers(int[][] heightMapInt, int mapWidth, int mapHeight, int numOfRivers, long seed){
 		Random random = new Random(seed);
 
 		//check Grid for possible Riverstartings
@@ -77,29 +70,17 @@ public class MapGenerator {
 		}
 		
 		System.out.println("found " + riverStartpositions.size() + " river startpositions");
-		ArrayList<Point> riverPointList = new ArrayList<>();
 		if(riverStartpositions.size() > 0){
-			Point[] actualRiver;
 			River_PathFinding riverPath = new River_PathFinding();
 			for(int i = 0 ; i < numOfRivers; i++){
 				int index = (int) (random.nextDouble()*riverStartpositions.size());
-				actualRiver = riverPath.generateARiver(heightMapInt, mapWidth, mapHeight, riverStartpositions.get(index), heightLayers[1]);
-				if(actualRiver != null){
-					for(int j = 0; j < actualRiver.length; j++){
-						riverPointList.add(actualRiver[j]);
-					}
-				}				
-			}
-			riverPositions = new Point[riverPointList.size()];
-			for(int i = 0; i < riverPointList.size(); i++){
-				riverPositions[i] = riverPointList.get(i);
+				heightMapInt = riverPath.generateARiver(seed, heightMapInt, mapWidth, mapHeight, riverStartpositions.get(index), heightLayers[1]);				
 			}
 		}else{
 			System.out.println("generated 0 rivers!");
 		}
 		
-		
-		return riverPositions;
+		return heightMapInt;
 	}
 
 
